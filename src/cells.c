@@ -1,5 +1,6 @@
 #include <pix.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static int** cellptr;
 static int w, h;
@@ -44,11 +45,11 @@ static inline void cells_sand_chaos()
                     cellptr[y][x] = CELL_NULL;
                     cellptr[y - 1][x] = CELL_BLOCK;
                 } 
-                else if (cellptr[y - 1][x + 1] == CELL_NULL) {
+                else if (x + 1 < w && cellptr[y - 1][x + 1] == CELL_NULL) {
                     cellptr[y][x] = CELL_NULL;
                     cellptr[y - 1][x + 1] = CELL_BLOCK;
                 }
-                else if (cellptr[y - 1][x + 1] == CELL_NULL) {
+                else if (x > 0 && cellptr[y - 1][x - 1] == CELL_NULL) {
                     cellptr[y][x] = CELL_NULL;
                     cellptr[y - 1][x - 1] = CELL_BLOCK;
                 }
@@ -153,6 +154,11 @@ static inline void cells_automata_chaos()
     }
 }
 
+void cells_nothing()
+{
+
+}
+
 void cells_update()
 {
     static vec2 mouse;
@@ -160,11 +166,33 @@ void cells_update()
     mouse = vec2_mult(mouse, iScale);
 
     if (glee_mouse_down(GLFW_MOUSE_BUTTON_LEFT)) {
-        cellptr[(int)mouse.y][(int)mouse.x] = CELL_BLOCK;
+        cellptr[(int)mouse.y % h][(int)mouse.x % w] = CELL_BLOCK;
     }
 
-    cells_sand();
-    //cells_automata();
+    static void (*func_ptr)() = &cells_sand;
+
+    if (glee_key_pressed(GLFW_KEY_0)) {
+        printf("Func nothing\n");
+        func_ptr = &cells_nothing;
+    }
+    if (glee_key_pressed(GLFW_KEY_1)) {
+        printf("Func sand\n");
+        func_ptr = &cells_sand;
+    }
+    if (glee_key_pressed(GLFW_KEY_2)) {
+        printf("Func sand chaos\n");
+        func_ptr = &cells_sand_chaos;
+    }
+    if (glee_key_pressed(GLFW_KEY_3)) {
+        printf("Func automata\n");
+        func_ptr = &cells_automata;
+    }
+    if (glee_key_pressed(GLFW_KEY_4)) {
+        printf("Func automata chaos\n");
+        func_ptr = &cells_automata_chaos;
+    }
+
+    func_ptr();
 }
 
 void cells_deinit()
